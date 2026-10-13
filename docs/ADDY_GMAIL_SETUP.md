@@ -21,7 +21,13 @@ If the virtual environment already exists, skip the venv creation.
     .\.venv\Scripts\python.exe scripts\addy_gmail_test.py token
     .\.venv\Scripts\python.exe scripts\addy_gmail_test.py create
 
-The tool prompts for the API key without echoing. The default domain is `anonaddy.me` and the alias format is UUID. If your plan uses another allowed domain, specify `create --domain YOUR-DOMAIN`. To route directly to a verified recipient, specify `--recipient-id RECIPIENT-ID`.
+For a readable alias name instead of a UUID, run:
+
+    .\\.venv\\Scripts\\python.exe scripts\\addy_gmail_test.py create --name privet-test
+
+This submits `format=custom` and `local_part=privet-test` to Addy.io. The exact resulting address can include an automatically appended suffix; always use the email printed by the API. Custom names on shared domains may require a paid plan.
+
+The tool prompts for the API key without echoing. The default domain is `anonaddy.me` and the alias format is UUID when `--name` is omitted. If your plan uses another allowed domain, specify `create --domain YOUR-DOMAIN`. To route directly to a verified recipient, specify `--recipient-id RECIPIENT-ID`.
 
 `create` creates exactly **one** alias and prints the address. Send a harmless test email to that alias from a different mailbox.
 

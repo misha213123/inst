@@ -30,6 +30,24 @@ class HeaderTests(unittest.TestCase):
         self.assertTrue(mod.matches_alias(headers, "two@example.org"))
         self.assertFalse(mod.matches_alias(headers, "three@example.org"))
 
+    def test_create_custom_alias_payload(self):
+        result = {"data": {"id": "new", "email": "privet-test-abc@anonaddy.me"}}
+        with patch.object(mod, "addy_request", return_value=result) as fake:
+            self.assertEqual(
+                mod.create_alias("anonaddy.me", name="privet-test"),
+                ("new", "privet-test-abc@anonaddy.me"),
+            )
+            fake.assert_called_once_with("POST", "/aliases", data={
+                "domain": "anonaddy.me",
+                "format": "custom",
+                "local_part": "privet-test",
+                "description": "Personal Addy to Gmail delivery test",
+            })
+
+    def test_reject_invalid_custom_name(self):
+        with self.assertRaises(ValueError):
+            mod.create_alias("anonaddy.me", name="not an email@alias")
+
     def test_create_alias_payload(self):
         result = {"data": {"id": "abc", "email": "x@anonaddy.me"}}
         with patch.object(mod, "addy_request", return_value=result) as fake:

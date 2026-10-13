@@ -13,6 +13,7 @@ import argparse
 import getpass
 import json
 import os
+import re
 import sys
 import time
 from email.utils import getaddresses
@@ -60,13 +61,21 @@ def addy_request(method: str, route: str, *, data: dict | None = None) -> dict:
     return result
 
 
-def create_alias(domain: str, recipient_id: str | None = None) -> tuple[str, str]:
-    """Create exactly one alias. Default Addy recipient is used if not specified."""
+def create_alias(
+    domain: str, recipient_id: str | None = None, name: str | None = None
+) -> tuple[str, str]:
+    """Create one alias; optionally use a readable custom local part."""
+    if name is not None:
+        name = name.strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,62}", name):
+            raise ValueError("Invalid alias name: use 2-63 Latin letters, digits, dots, underscores or hyphens")
     body: dict = {
         "domain": domain,
-        "format": "uuid",
+        "format": "custom" if name else "uuid",
         "description": "Personal Addy to Gmail delivery test",
     }
+    if name:
+        body["local_part"] = name
     if recipient_id:
         body["recipient_ids"] = [recipient_id]
     result = addy_request("POST", "/aliases", data=body).get("data") or {}
@@ -166,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("token", help="Check Addy API token (read-only)")
     create = sub.add_parser("create", help="Create ONE Addy alias")
     create.add_argument("--domain", default="anonaddy.me")
+    create.add_argument("--name", help="Custom readable alias local part (Addy.io plan restrictions may apply)")
     create.add_argument("--recipient-id", help="Optional verified Addy recipient ID")
     check = sub.add_parser("check", help="Find forwarded mail using Gmail headers only")
     check.add_argument("--alias", required=True)
@@ -180,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
             print("[OK] Addy.io API token accepted")
             return 0
         if args.command == "create":
-            _, address = create_alias(args.domain, args.recipient_id)
+            _, address = create_alias(args.domain, args.recipient_id, args.name)
             print("[OK] One alias created:")
             print(address)
             print("Send a test email from another address to this alias.")
