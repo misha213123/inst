@@ -8,3 +8,9 @@ venv/
 *.har
 _last_create_bloks.txt
 .ip_geo_cache.json
+# Do not commit Addy/Gmail auth credentials or tokens.
+.private/
+credentials.json
+gmail_token.json
+token.json
+client_secret*.json
